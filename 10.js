@@ -1,6 +1,6 @@
 const mahasiswa = {
-    nama: "Andi",
-    umur: 21,
+    nama: "Natasha ummi amanda",
+    umur: 20,
     jurusan: "Informatika"
 };
 
