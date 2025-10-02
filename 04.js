@@ -34,7 +34,7 @@ class Mahasiswa {
 // ==============================
 
 // Membuat objek mahasiswa dengan nama Anda
-let mhsIlqi = new Mahasiswa("Ilqi", "202501", 85);
+let mhsIlqi = new Mahasiswa("Ilqi", "202401110092", 85);
 
 // Tampilkan data awal
 console.log("=== Data Mahasiswa Awal ===");
