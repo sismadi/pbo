@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form GUI Sederhana</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 25px 30px;
+            border-radius: 10px;
+            width: 350px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        input {
+            width: 90%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 6px;
+        }
+
+        img {
+            width: 120px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- GAMBAR -->
+    <img src="foto.png" alt="Gambar GUI">
+
+    <h1>Masukkan Nama Anda</h1>
+
+    <p>Silakan masukkan nama Anda pada kolom input di bawah ini, lalu klik tombol Submit.</p>
+
+    <input type="text" id="nameInput" placeholder="Nama Anda">
+    <button onclick="tampilkanNama()">Submit</button>
+
+    <h2 id="output"></h2>
+
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>No</th>
+            <th>Keterangan</th>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>Contoh Table GUI</td>
+        </tr>
+    </table>
+
+    <br>
+
+    <object data="data:text/plain,Ini adalah contoh object pada HTML GUI"
+            width="300"
+            height="80">
+    </object>
+
+</div>
+
+<script>
+    function tampilkanNama() {
+        let nama = document.getElementById("nameInput").value;
+        document.getElementById("output").innerText = "Halo, " + nama + "!";
+    }
+</script>
+
+</body>
+</html>
