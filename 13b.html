@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form GUI Sederhana</title>
+</head>
+<body>
+
+    <h1>Masukkan Nama Anda</h1>
+
+    <!-- Paragraf -->
+    <p>Silakan masukkan nama Anda pada kolom input di bawah ini, lalu klik tombol Submit.</p>
+
+    <!-- Input -->
+    <input type="text" id="nameInput" placeholder="Nama Anda">
+    <button onclick="tampilkanNama()">Submit</button>
+
+    <!-- Output -->
+    <h2 id="output"></h2>
+
+    <br>
+
+    <!-- Table -->
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>No</th>
+            <th>Keterangan</th>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>Contoh Table GUI</td>
+        </tr>
+    </table>
+
+    <br>
+
+    <!-- Object -->
+    <object data="data:text/plain,Ini adalah contoh object pada HTML GUI"
+            width="300"
+            height="80">
+    </object>
+
+    <!-- Script -->
+    <script>
+        function tampilkanNama() {
+            let nama = document.getElementById("nameInput").value;
+            document.getElementById("output").innerText = "Halo, " + nama + "!";
+        }
+    </script>
+
+</body>
+</html>
