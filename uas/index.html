@@ -40,6 +40,15 @@
         button:hover {
             background: #45a049;
         }
+
+        /* Tombol Logout merah */
+        .logout {
+            background: #e53935;
+        }
+
+        .logout:hover {
+            background: #c62828;
+        }
     </style>
 </head>
 <body>
@@ -54,7 +63,7 @@
 <div class="box" id="userBox" style="display:none;">
     <h2>Info User</h2>
     <p id="userInfo"></p>
-    <button onclick="app.logout()">Logout</button>
+    <button class="logout" onclick="app.logout()">Logout</button>
 </div>
 
 <script>
