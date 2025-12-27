@@ -49,20 +49,28 @@
         .logout:hover {
             background: #c62828;
         }
+
+        .welcome {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
 
 <div class="box" id="loginBox">
-    <h2>Login</h2>
+    <h2>🔐 Login</h2>
     <input type="text" id="username" placeholder="Username">
     <input type="password" id="password" placeholder="Password">
     <button onclick="app.login()">Login</button>
 </div>
 
 <div class="box" id="userBox" style="display:none;">
-    <h2>Info User</h2>
+    <div class="welcome">
+        🎉 Selamat Datang! 🎉
+    </div>
     <p id="userInfo"></p>
+    <p>Semoga harimu menyenangkan 😊✨</p>
     <button class="logout" onclick="app.logout()">Logout</button>
 </div>
 
@@ -92,7 +100,7 @@ class LoginApp {
         );
 
         if (!foundUser) {
-            alert("salah login");
+            alert("salah login ❌");
         } else {
             this.showUser(foundUser);
         }
@@ -102,12 +110,15 @@ class LoginApp {
         document.getElementById("loginBox").style.display = "none";
         document.getElementById("userBox").style.display = "block";
         document.getElementById("userInfo").innerText =
-            `Username: ${user.username}`;
+            `👤 Username: ${user.username}`;
     }
 
     logout() {
-        document.getElementById("loginBox").style.display = "block";
-        document.getElementById("userBox").style.display = "none";
+        const confirmLogout = confirm("Yakin ingin logout? 👋");
+        if (confirmLogout) {
+            document.getElementById("loginBox").style.display = "block";
+            document.getElementById("userBox").style.display = "none";
+        }
     }
 }
 
