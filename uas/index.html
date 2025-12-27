@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>Aplikasi Login OOP</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background: #1e1e1e;
@@ -24,17 +28,21 @@
 
         input {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             margin: 8px 0;
+            border: none;
+            border-radius: 4px;
         }
 
         button {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             background: #4CAF50;
             border: none;
+            border-radius: 4px;
             color: white;
             cursor: pointer;
+            margin-top: 10px;
         }
 
         button:hover {
@@ -66,9 +74,7 @@
 </div>
 
 <div class="box" id="userBox" style="display:none;">
-    <div class="welcome">
-        🎉 Selamat Datang! 🎉
-    </div>
+    <div class="welcome">🎉 Selamat Datang! 🎉</div>
     <p id="userInfo"></p>
     <p>Semoga harimu menyenangkan 😊✨</p>
     <button class="logout" onclick="app.logout()">Logout</button>
@@ -114,8 +120,7 @@ class LoginApp {
     }
 
     logout() {
-        const confirmLogout = confirm("Yakin ingin logout? 👋");
-        if (confirmLogout) {
+        if (confirm("Yakin ingin logout? 👋")) {
             document.getElementById("loginBox").style.display = "block";
             document.getElementById("userBox").style.display = "none";
         }
