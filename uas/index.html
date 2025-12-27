@@ -1,1 +1,109 @@
-natasha ummi amanda
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Aplikasi Login OOP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1e1e1e;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .box {
+            background: #2c2c2c;
+            padding: 25px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+        }
+
+        button {
+            width: 100%;
+            padding: 8px;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box" id="loginBox">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="app.login()">Login</button>
+</div>
+
+<div class="box" id="userBox" style="display:none;">
+    <h2>Info User</h2>
+    <p id="userInfo"></p>
+    <button onclick="app.logout()">Logout</button>
+</div>
+
+<script>
+class LoginApp {
+    constructor() {
+        this.initData();
+    }
+
+    initData() {
+        if (!localStorage.getItem("users")) {
+            const users = [
+                { username: "admin", password: "12345" },
+                { username: "user", password: "user123" }
+            ];
+            localStorage.setItem("users", JSON.stringify(users));
+        }
+    }
+
+    login() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        const users = JSON.parse(localStorage.getItem("users"));
+        const foundUser = users.find(
+            user => user.username === username && user.password === password
+        );
+
+        if (!foundUser) {
+            alert("salah login");
+        } else {
+            this.showUser(foundUser);
+        }
+    }
+
+    showUser(user) {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("userBox").style.display = "block";
+        document.getElementById("userInfo").innerText =
+            `Username: ${user.username}`;
+    }
+
+    logout() {
+        document.getElementById("loginBox").style.display = "block";
+        document.getElementById("userBox").style.display = "none";
+    }
+}
+
+const app = new LoginApp();
+</script>
+
+</body>
+</html>
