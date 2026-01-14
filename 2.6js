@@ -1,0 +1,21 @@
+class Mobil {
+// Konstruktor untuk inisialisasi objek
+constructor(merek,model,tahun){
+ this.merek = merek; // properti objek
+ this.model = model;
+ this.tahun = tahun;
+}
+// metode untuk menampilkan informasi mobil
+displayInfo() {
+ console.log(' Mobil:${this.model}
+  (${this.tahun})');
+}
+}
+// instansasi objek dari kelas mobil
+const mobil1 = new Mobil('Toyota','Corolla',2020): //
+  Membuat objek mobil
+const mobil2 = new Mobil('Honda','Civic',2021): //
+  Membuat objek mobil2
+// Memanggil metode untuk menampilkan informasi
+mobil1.displayInfo();// Output:Mobil:Toyota Corolla (2020)
+mobil2.displayInfo();// Output:Mobil:Honda Civic (2021)
