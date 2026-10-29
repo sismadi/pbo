@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi SPA Manajemen User - Konsep PBO</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+      background: var(--surface);
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    nav {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+    nav button {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      background: none;
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    nav button.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    /* SPA View Mechanics */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px 12px;
+      box-sizing: border-box;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+    button.btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px;
+      text-align: left;
+    }
+    th { background: #f1f5f9; }
+    .badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .badge-admin { background: #dbeafe; color: #1e40af; }
+    .badge-member { background: #fef3c7; color: #92400e; }
+    .card {
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 6px;
+      background: #f8fafc;
+    }
+    .demo-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    .alert-success {
+      background: #dcfce7;
+      color: #15803d;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- SPA Navigation Bar -->
+  <nav id="navbar" style="display: none;">
+    <button onclick="App.navigate('users-page')" id="nav-users">Daftar User (CRUD)</button>
+    <button onclick="App.navigate('profile-page')" id="nav-profile">Edit Profile</button>
+    <button onclick="App.resetToDefault()" style="background: #f59e0b; color: white;">Reset Data Demo</button>
+    <button onclick="App.logout()" style="margin-left: auto; background: #ef4444; color: white;">Logout</button>
+  </nav>
+
+  <!-- Halaman 1: Login (SPA View) -->
+  <div id="login-page" class="page active">
+    <h2>Login Sistem</h2>
+    
+    <div class="demo-box">
+      <strong>Kredensial Demo (Password = Username):</strong>
+      <ul style="margin: 5px 0 0 18px; padding: 0;">
+        <li><code>admin</code> / <code>sysadmin</code> (Role: Admin)</li>
+        <li><code>budi</code> / <code>siti</code> / <code>dewi</code> (Role: Member)</li>
+      </ul>
+    </div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-username" required placeholder="Masukkan username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" required placeholder="Masukkan password">
+      </div>
+      <button type="submit" class="btn">Masuk</button>
+    </form>
+  </div>
+
+  <!-- Halaman 2: Kelola User - CRUD (SPA View) -->
+  <div id="users-page" class="page">
+    <h2>Daftar & Kelola User (CRUD)</h2>
+    <form id="user-form">
+      <input type="hidden" id="user-index">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="input-username" required>
+      </div>
+      <div class="form-group">
+        <label>Nama Lengkap</label>
+        <input type="text" id="input-fullname" required>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="input-role" onchange="App.toggleRoleField()">
+          <option value="Admin">Admin</option>
+          <option value="Member">Member</option>
+        </select>
+      </div>
+      <div class="form-group" id="group-extra">
+        <label id="label-extra">Kode Akses Admin</label>
+        <input type="text" id="input-extra" required>
+      </div>
+      <button type="submit" class="btn" id="btn-save">Tambah User</button>
+      <button type="button" class="btn" onclick="App.resetForm()" style="display:none; background: #64748b;" id="btn-cancel">Batal</button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Nama Lengkap</th>
+          <th>Role</th>
+          <th>Atribut Khusus</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="user-table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Halaman 3: Edit Profile (SPA View) -->
+  <div id="profile-page" class="page">
+    <h2>Edit Profile Saya</h2>
+    <div id="profile-alert" class="alert-success">Profil berhasil diperbarui!</div>
+    
+    <div class="card">
+      <form id="profile-form">
+        <div class="form-group">
+          <label>Username (Read-only)</label>
+          <input type="text" id="profile-username" disabled style="background: #e2e8f0;">
+        </div>
+        <div class="form-group">
+          <label>Role (Read-only)</label>
+          <input type="text" id="profile-role" disabled style="background: #e2e8f0;">
+        </div>
+        <div class="form-group">
+          <label>Nama Lengkap</label>
+          <input type="text" id="profile-fullname" required>
+        </div>
+        <div class="form-group">
+          <label id="profile-label-extra">Atribut Khusus</label>
+          <input type="text" id="profile-extra" required>
+        </div>
+        <button type="submit" class="btn" style="background: var(--success);">Simpan Perubahan Profile</button>
+      </form>
+
+      <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--border);">
+      
+      <h4>Output Method Polimorfisme (`getRolePermissions()`):</h4>
+      <blockquote id="profile-polymorphic-output" style="margin: 0; background: #ffffff; padding: 12px; border-left: 4px solid var(--primary); border-radius: 4px;">
+      </blockquote>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ==========================================
+  // 1. STRUKTUR PBO (INHERITANCE & POLYMORPHISM)
+  // ==========================================
+
+  // Superclass
+  class User {
+    constructor(username, fullName, role) {
+      this.username = username;
+      this.fullName = fullName;
+      this.role = role;
+    }
+
+    getDetails() {
+      return `User: ${this.fullName} (${this.username})`;
+    }
+
+    // Dynamic Polymorphic Method
+    getRolePermissions() {
+      return "Akses standar sistem.";
+    }
+  }
+
+  // Subclass 1: AdminUser
+  class AdminUser extends User {
+    constructor(username, fullName, adminCode) {
+      super(username, fullName, "Admin");
+      this.adminCode = adminCode;
+    }
+
+    // Overriding Method (Polimorfisme)
+    getRolePermissions() {
+      return `Hak Akses Full Admin. Kode Otorisasi: ${this.adminCode}`;
+    }
+  }
+
+  // Subclass 2: MemberUser
+  class MemberUser extends User {
+    constructor(username, fullName, points) {
+      super(username, fullName, "Member");
+      this.points = points;
+    }
+
+    // Overriding Method (Polimorfisme)
+    getRolePermissions() {
+      return `Hak Akses Member. Total Poin Reward: ${this.points} pts`;
+    }
+  }
+
+  // Factory Pattern untuk Instansiasi Objek
+  class UserFactory {
+    static createInstance(data) {
+      if (data.role === "Admin") {
+        return new AdminUser(data.username, data.fullName, data.extra);
+      } else {
+        return new MemberUser(data.username, data.fullName, data.extra);
+      }
+    }
+  }
+
+  // ==========================================
+  // 2. SPA MANAGER & LOCALSTORAGE CONTROLLER
+  // ==========================================
+
+  class AppManager {
+    constructor() {
+      this.currentUser = null;
+      this.defaultUsers = [
+        { username: 'admin', fullName: 'Administrator Utama', role: 'Admin', extra: 'ADM-99' },
+        { username: 'sysadmin', fullName: 'Tim Super Admin', role: 'Admin', extra: 'ADM-101' },
+        { username: 'budi', fullName: 'Budi Santoso', role: 'Member', extra: '150' },
+        { username: 'siti', fullName: 'Siti Aminah', role: 'Member', extra: '320' },
+        { username: 'dewi', fullName: 'Dewi Lestari', role: 'Member', extra: '75' }
+      ];
+      this.initData();
+    }
+
+    initData() {
+      if (!localStorage.getItem('users')) {
+        localStorage.setItem('users', JSON.stringify(this.defaultUsers));
+      }
+    }
+
+    resetToDefault() {
+      if (confirm('Kembalikan dataset ke kondisi awal demo?')) {
+        localStorage.setItem('users', JSON.stringify(this.defaultUsers));
+        this.renderTable();
+        if (this.currentUser) {
+          // Re-sync current user session
+          const users = this.getUsers();
+          const refreshed = users.find(u => u.username === this.currentUser.username);
+          if (refreshed) this.currentUser = refreshed;
+          this.renderProfileView();
+        }
+      }
+    }
+
+    getUsers() {
+      const rawData = JSON.parse(localStorage.getItem('users')) || [];
+      return rawData.map(data => UserFactory.createInstance(data));
+    }
+
+    saveUsers(users) {
+      const rawData = users.map(u => ({
+        username: u.username,
+        fullName: u.fullName,
+        role: u.role,
+        extra: u instanceof AdminUser ? u.adminCode : u.points
+      }));
+      localStorage.setItem('users', JSON.stringify(rawData));
+    }
+
+    // SPA Router Engine
+    navigate(pageId) {
+      document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(pageId).classList.add('active');
+      
+      if (pageId === 'users-page') {
+        document.getElementById('nav-users').classList.add('active');
+        this.renderTable();
+      } else if (pageId === 'profile-page') {
+        document.getElementById('nav-profile').classList.add('active');
+        this.renderProfileView();
+      }
+    }
+
+    toggleRoleField() {
+      const role = document.getElementById('input-role').value;
+      const label = document.getElementById('label-extra');
+      label.innerText = role === 'Admin' ? 'Kode Akses Admin' : 'Poin Reward';
+    }
+
+    login(username, password) {
+      const users = this.getUsers();
+      const user = users.find(u => u.username === username);
+      
+      if (user && password === username) {
+        this.currentUser = user;
+        document.getElementById('navbar').style.display = 'flex';
+        this.navigate('users-page');
+      } else {
+        alert('Login gagal! Gunakan username = password (misal: admin/admin atau siti/siti)');
+      }
+    }
+
+    logout() {
+      this.currentUser = null;
+      document.getElementById('navbar').style.display = 'none';
+      document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+      document.getElementById('login-page').classList.add('active');
+      document.getElementById('login-form').reset();
+    }
+
+    // --- RENDER TABLE (CRUD PAGE) ---
+    renderTable() {
+      const users = this.getUsers();
+      const tbody = document.getElementById('user-table-body');
+      tbody.innerHTML = '';
+
+      users.forEach((user, index) => {
+        const extraDetail = user instanceof AdminUser ? `Kode: ${user.adminCode}` : `Poin: ${user.points}`;
+        const badgeClass = user.role === 'Admin' ? 'badge-admin' : 'badge-member';
+
+        tbody.innerHTML += `
+          <tr>
+            <td><code>${user.username}</code></td>
+            <td>${user.fullName}</td>
+            <td><span class="badge ${badgeClass}">${user.role}</span></td>
+            <td>${extraDetail}</td>
+            <td>
+              <button class="btn" onclick="App.editUser(${index})" style="padding: 4px 8px; font-size: 12px;">Edit</button>
+              <button class="btn" onclick="App.deleteUser(${index})" style="padding: 4px 8px; font-size: 12px; background: #ef4444;">Hapus</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    // --- RENDER PROFILE VIEW & EDIT FORM ---
+    renderProfileView() {
+      if (!this.currentUser) return;
+
+      document.getElementById('profile-username').value = this.currentUser.username;
+      document.getElementById('profile-role').value = this.currentUser.role;
+      document.getElementById('profile-fullname').value = this.currentUser.fullName;
+      
+      const labelExtra = document.getElementById('profile-label-extra');
+      const inputExtra = document.getElementById('profile-extra');
+
+      if (this.currentUser instanceof AdminUser) {
+        labelExtra.innerText = 'Kode Akses Admin';
+        inputExtra.value = this.currentUser.adminCode;
+      } else {
+        labelExtra.innerText = 'Poin Reward';
+        inputExtra.value = this.currentUser.points;
+      }
+
+      // Render Polimorfis
+      document.getElementById('profile-polymorphic-output').innerText = this.currentUser.getRolePermissions();
+    }
+
+    // --- UPDATE PROFILE ACTION ---
+    saveProfileFromForm(e) {
+      e.preventDefault();
+      const fullName = document.getElementById('profile-fullname').value;
+      const extra = document.getElementById('profile-extra').value;
+
+      const users = this.getUsers();
+      const userIndex = users.findIndex(u => u.username === this.currentUser.username);
+
+      if (userIndex !== -1) {
+        // Re-instantiate polymorphic object
+        const updatedUser = UserFactory.createInstance({
+          username: this.currentUser.username,
+          fullName: fullName,
+          role: this.currentUser.role,
+          extra: extra
+        });
+
+        users[userIndex] = updatedUser;
+        this.saveUsers(users);
+        this.currentUser = updatedUser; // Update active session
+
+        // Flash Alert
+        const alertEl = document.getElementById('profile-alert');
+        alertEl.style.display = 'block';
+        setTimeout(() => alertEl.style.display = 'none', 2500);
+
+        this.renderProfileView();
+      }
+    }
+
+    // --- USER CRUD OPERATIONS ---
+    saveUserFromForm(e) {
+      e.preventDefault();
+      const index = document.getElementById('user-index').value;
+      const username = document.getElementById('input-username').value;
+      const fullName = document.getElementById('input-fullname').value;
+      const role = document.getElementById('input-role').value;
+      const extra = document.getElementById('input-extra').value;
+
+      const users = this.getUsers();
+      const newUser = UserFactory.createInstance({ username, fullName, role, extra });
+
+      if (index === '') {
+        users.push(newUser);
+      } else {
+        users[index] = newUser;
+        // Jika user yang diedit adalah user yang sedang login, update sesi
+        if (newUser.username === this.currentUser.username) {
+          this.currentUser = newUser;
+        }
+      }
+
+      this.saveUsers(users);
+      this.resetForm();
+      this.renderTable();
+    }
+
+    editUser(index) {
+      const user = this.getUsers()[index];
+      document.getElementById('user-index').value = index;
+      document.getElementById('input-username').value = user.username;
+      document.getElementById('input-fullname').value = user.fullName;
+      document.getElementById('input-role').value = user.role;
+      this.toggleRoleField();
+      document.getElementById('input-extra').value = user instanceof AdminUser ? user.adminCode : user.points;
+
+      document.getElementById('btn-save').innerText = 'Update User';
+      document.getElementById('btn-cancel').style.display = 'inline-block';
+    }
+
+    deleteUser(index) {
+      const users = this.getUsers();
+      const targetUser = users[index];
+
+      if (targetUser.username === this.currentUser.username) {
+        alert('Anda tidak bisa menghapus akun yang sedang login!');
+        return;
+      }
+
+      if (confirm(`Yakin ingin menghapus user ${targetUser.username}?`)) {
+        users.splice(index, 1);
+        this.saveUsers(users);
+        this.renderTable();
+      }
+    }
+
+    resetForm() {
+      document.getElementById('user-form').reset();
+      document.getElementById('user-index').value = '';
+      document.getElementById('btn-save').innerText = 'Tambah User';
+      document.getElementById('btn-cancel').style.display = 'none';
+      this.toggleRoleField();
+    }
+  }
+
+  // Instansiasi Aplikasi SPA
+  const App = new AppManager();
+
+  // Event Listeners Engine
+  document.getElementById('login-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const u = document.getElementById('login-username').value;
+    const p = document.getElementById('login-password').value;
+    App.login(u, p);
+  });
+
+  document.getElementById('user-form').addEventListener('submit', (e) => App.saveUserFromForm(e));
+  document.getElementById('profile-form').addEventListener('submit', (e) => App.saveProfileFromForm(e));
+</script>
+
+</body>
+</html>
