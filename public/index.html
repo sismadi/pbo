@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PBO SPA - Cloudflare D1 CRUD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800">
+
+    <div id="app" class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Dynamic Header -->
+        <header class="flex justify-between items-center mb-8 bg-white p-4 rounded-xl shadow-sm">
+            <h1 class="text-xl font-bold text-indigo-600"><i class="fa-solid fa-layer-group mr-2"></i>System PBO D1</h1>
+            <div id="nav-actions" class="flex gap-3"></div>
+        </header>
+
+        <!-- View 1: Form Login -->
+        <section id="view-login" class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-2xl font-bold mb-4 text-center">Login Sistem</h2>
+            <form id="form-login" onsubmit="app.handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="login-email" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value="admin@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="login-password" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value="admin123">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Masuk</button>
+            </form>
+        </section>
+
+        <!-- View 2: Form Profile -->
+        <section id="view-profile" class="hidden max-w-lg mx-auto bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-2xl font-bold mb-4">Profil Saya</h2>
+            <form id="form-profile" onsubmit="app.handleSaveProfile(event)" class="space-y-4">
+                <input type="hidden" id="profile-id">
+                <div class="flex justify-center mb-4">
+                    <img id="profile-preview" class="w-24 h-24 rounded-full object-cover border-2 border-indigo-500" src="" alt="Avatar">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                    <input type="text" id="profile-name" required class="w-full mt-1 p-2 border rounded-lg outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="profile-email" required class="w-full mt-1 p-2 border rounded-lg outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Password (Opsional)</label>
+                    <input type="password" id="profile-password" placeholder="Kosongkan jika tidak diubah" class="w-full mt-1 p-2 border rounded-lg outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">URL Avatar</label>
+                    <input type="url" id="profile-avatar" required class="w-full mt-1 p-2 border rounded-lg outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Peran (Role)</label>
+                    <input type="text" id="profile-role" disabled class="w-full mt-1 p-2 border bg-gray-100 rounded-lg text-gray-500 capitalize">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Simpan Perubahan</button>
+            </form>
+        </section>
+
+        <!-- View 3: Tabel Users (CRUD Admin) -->
+        <section id="view-users" class="hidden bg-white p-6 rounded-xl shadow-md">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Manajemen User (Admin Panel)</h2>
+                <button onclick="app.openModalUser()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"><i class="fa-solid fa-plus mr-1"></i> Tambah User</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b">
+                            <th class="p-3">User</th>
+                            <th class="p-3">Email</th>
+                            <th class="p-3">Role</th>
+                            <th class="p-3 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Sesuaikan dengan URL endpoint Cloudflare Worker Anda
+        const API_BASE_URL = 'http://127.0.0.1:8787/api';
+
+        class App {
+            constructor() {
+                this.currentUser = JSON.parse(localStorage.getItem('session_user')) || null;
+                this.init();
+            }
+
+            init() {
+                this.renderNav();
+                if (this.currentUser) {
+                    this.showView(this.currentUser.role === 'admin' ? 'users' : 'profile');
+                } else {
+                    this.showView('login');
+                }
+            }
+
+            showView(viewName) {
+                ['login', 'profile', 'users'].forEach(v => {
+                    document.getElementById(`view-${v}`).classList.add('hidden');
+                });
+                document.getElementById(`view-${viewName}`).classList.remove('hidden');
+
+                if (viewName === 'profile') this.loadProfileView();
+                if (viewName === 'users') this.loadUsersView();
+            }
+
+            renderNav() {
+                const nav = document.getElementById('nav-actions');
+                if (!this.currentUser) {
+                    nav.innerHTML = `<span class="text-sm text-gray-500 self-center">Silakan Login</span>`;
+                    return;
+                }
+
+                nav.innerHTML = `
+                    <button onclick="app.showView('profile')" class="px-3 py-1.5 rounded-lg text-sm bg-gray-100 hover:bg-gray-200"><i class="fa-solid fa-user mr-1"></i> Profil</button>
+                    ${this.currentUser.canManageUsers ? `<button onclick="app.showView('users')" class="px-3 py-1.5 rounded-lg text-sm bg-gray-100 hover:bg-gray-200"><i class="fa-solid fa-users mr-1"></i> Kelola User</button>` : ''}
+                    <button onclick="app.handleLogout()" class="px-3 py-1.5 rounded-lg text-sm bg-red-100 text-red-600 hover:bg-red-200"><i class="fa-solid fa-right-from-bracket mr-1"></i> Logout</button>
+                `;
+            }
+
+            async handleLogin(e) {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+
+                try {
+                    const res = await fetch(`${API_BASE_URL}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    const result = await res.json();
+
+                    if (result.success) {
+                        this.currentUser = result.user;
+                        localStorage.setItem('session_user', JSON.stringify(result.user));
+                        this.renderNav();
+                        this.showView(this.currentUser.canManageUsers ? 'users' : 'profile');
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (err) {
+                    alert('Gagal terhubung ke API Worker: ' + err.message);
+                }
+            }
+
+            handleLogout() {
+                this.currentUser = null;
+                localStorage.removeItem('session_user');
+                this.renderNav();
+                this.showView('login');
+            }
+
+            loadProfileView() {
+                document.getElementById('profile-id').value = this.currentUser.id;
+                document.getElementById('profile-name').value = this.currentUser.name;
+                document.getElementById('profile-email').value = this.currentUser.email;
+                document.getElementById('profile-avatar').value = this.currentUser.avatar;
+                document.getElementById('profile-role').value = this.currentUser.role;
+                document.getElementById('profile-preview').src = this.currentUser.avatar;
+            }
+
+            async handleSaveProfile(e) {
+                e.preventDefault();
+                const id = document.getElementById('profile-id').value;
+                const data = {
+                    name: document.getElementById('profile-name').value,
+                    email: document.getElementById('profile-email').value,
+                    password: document.getElementById('profile-password').value,
+                    avatar: document.getElementById('profile-avatar').value,
+                    role: this.currentUser.role
+                };
+
+                const res = await fetch(`${API_BASE_URL}/users/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    this.currentUser = result.data;
+                    localStorage.setItem('session_user', JSON.stringify(result.data));
+                    alert('Profil berhasil diperbarui!');
+                    this.loadProfileView();
+                }
+            }
+
+            async loadUsersView() {
+                const res = await fetch(`${API_BASE_URL}/users`);
+                const result = await res.json();
+                if (!result.success) return;
+
+                const tbody = document.getElementById('users-table-body');
+                tbody.innerHTML = result.data.map(u => `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 flex items-center gap-3">
+                            <img src="${u.avatar}" class="w-8 h-8 rounded-full object-cover">
+                            <span class="font-medium">${u.name}</span>
+                        </td>
+                        <td class="p-3 text-gray-600">${u.email}</td>
+                        <td class="p-3"><span class="px-2 py-1 rounded text-xs font-semibold ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${u.role}</span></td>
+                        <td class="p-3 text-center">
+                            <button onclick="app.deleteUser(${u.id})" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            async deleteUser(id) {
+                if (!confirm('Apakah Anda yakin ingin menghapus user ini?')) return;
+                const res = await fetch(`${API_BASE_URL}/users/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) this.loadUsersView();
+            }
+        }
+
+        const app = new App();
+    </script>
+</body>
+</html>
