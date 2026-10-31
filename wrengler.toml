@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pbo-crud-api",
+  "main": "src/worker.js",
+  "compatibility_date": "2024-03-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pbo",
+      "database_id": "27530bd1-7998-4880-98a9-8615b22a4ace"
+    }
+  ]
+}
